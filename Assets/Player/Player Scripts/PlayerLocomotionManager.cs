@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -12,21 +13,32 @@ public class PlayerLocomotionManager : MonoBehaviour
     float _verticalMovementInput;
     float _horizontalMovementInput;
     float _moveAmount;
+    bool _jumpInput;
+    bool _sprintInput;
+    bool _dashInput;
 
-    Vector3 _moveDirection;
-    Vector3 _targetRotationDirection;
-    public bool IsSprinting = false;    // Not the value of sprint input, but whether the player is currently sprinting.
-
-    [Header("Speed & Rotation Values")]
+    [Header("Movement Values")]
     public float WalkSpeed = 2f;
     public float RunSpeed = 4f;
     public float SprintSpeed = 6f;
-    public float RotationSpeed = 15f;
     float _currentSpeed = 0f;
+    Vector3 _moveDirection;
+    bool _isSprinting = false;    // Not the value of sprint input, but whether the player is currently sprinting.
 
-    //Header("Jump & Gravity")      // TODO: Implement jump and gravity after base locomotion and dashing is done.
+    [Header("Rotation Values")]
+    public float RotationSpeed = 15f;
+    Vector3 _targetRotationDirection;
 
-    //Header("Dashing")     //TODO: Implement dashing after base locomotion is done.
+    [Header("Jump & Gravity")]
+    public float JumpHeight = 20f;
+    public LayerMask JumpLayer;
+    [SerializeField] float _groundCheckRadius = 0.15f;
+    float _gravity = -9.81f;
+    float _inAirTimer;
+    bool _isGrounded;
+    bool _isJumping;
+    bool _fallingVelocitySet;
+    Vector3 yVelocity = Vector3.zero;
 
     private void Awake()
     {
@@ -38,6 +50,14 @@ public class PlayerLocomotionManager : MonoBehaviour
     { 
         GetMovementInputValues();
         GetMoveAmountValue();
+
+        HandleSprintInput();
+        HandleGroundMovement();
+        HandleRotation();
+
+        HandleGroundCheck();
+        HandleGravity();
+        HandleJump();
     }
 
     void GetMovementInputValues()
@@ -45,6 +65,13 @@ public class PlayerLocomotionManager : MonoBehaviour
         _movementInput = PlayerInputManager.Instance.MovementInput;
         _verticalMovementInput = _movementInput.y;
         _horizontalMovementInput = _movementInput.x;
+
+        _jumpInput = PlayerInputManager.Instance.JumpInput;
+        _sprintInput = PlayerInputManager.Instance.SprintInput;
+
+        // Reset certain action inputs in the input manager after reading it.
+        PlayerInputManager.Instance.JumpInput = false;
+        PlayerInputManager.Instance.DashInput = false;
     }
 
     // Calculate move amount based on movement input, cap it to specific intervals for the sake of only allowins specific movement states.
@@ -60,5 +87,141 @@ public class PlayerLocomotionManager : MonoBehaviour
         {
             _moveAmount = 1f;
         }
+    }
+
+    void HandleSprintInput()
+    {
+        // We need to be moving and on the ground to be able to sprint.
+        // This check prevents the player from being able to sprint in place.
+
+        if (_sprintInput)
+        {
+            if (_moveAmount >= 0.5f && _isGrounded)
+                _isSprinting = true;
+            else
+                _isSprinting = false;
+        }
+        else
+            _isSprinting = false;
+    }
+
+    void HandleGroundMovement()
+    {
+        // This will be used later on when there are actions such as dashing and attacking that prevent players from moving.
+        // if (PlayerManager.isPerformingAction)
+           // return;
+
+        Vector3 cameraForward = Camera.main.transform.forward;
+        Vector3 cameraRight = Camera.main.transform.right;
+
+        cameraForward.y = 0;
+        cameraRight.y = 0;
+
+        cameraForward.Normalize();
+        cameraRight.Normalize();
+
+        _moveDirection = cameraForward * _verticalMovementInput;
+        _moveDirection += cameraRight * _horizontalMovementInput;
+        _moveDirection.Normalize();
+
+        if (_isSprinting)
+        {
+            _currentSpeed = SprintSpeed;
+        }
+        else
+        {
+            if (_moveAmount == 0.5f)
+            {
+                _currentSpeed = WalkSpeed;
+            }
+            else if (_moveAmount == 1f)
+            {
+                _currentSpeed = RunSpeed;
+            }
+        }
+
+        CharacterController.Move(Time.deltaTime * _currentSpeed * _moveDirection);
+    }
+
+    void HandleRotation()
+    {
+        // This will be used later on when there are actions such as dashing and attacking that prevent players from moving.
+        //if (PlayerManager.isPerformingAction)
+        //return;
+
+        Vector3 cameraForward = Camera.main.transform.forward;
+        Vector3 cameraRight = Camera.main.transform.right;
+
+        cameraForward.y = 0;
+        cameraRight.y = 0;
+        cameraForward.Normalize();
+        cameraRight.Normalize();
+
+        _targetRotationDirection = Vector3.zero;
+        _targetRotationDirection = cameraForward * _verticalMovementInput;
+        _targetRotationDirection += cameraRight * _horizontalMovementInput;
+        _targetRotationDirection.y = 0f;
+
+        if (_targetRotationDirection == Vector3.zero)
+        {
+            _targetRotationDirection = transform.forward;
+        }
+
+        Quaternion newRotation = Quaternion.LookRotation(_targetRotationDirection);
+        Quaternion targetRotation = Quaternion.Slerp(transform.rotation, newRotation, RotationSpeed * Time.deltaTime);
+        transform.rotation = targetRotation;
+    }
+
+    void HandleGroundCheck()
+    {
+        _isGrounded = Physics.CheckSphere(PlayerManager.transform.position, _groundCheckRadius, JumpLayer);
+    }
+
+    void HandleGravity()
+    {
+        if (_isGrounded)
+        {
+            if (yVelocity.y < 0)
+            {
+                _inAirTimer = 0;
+                _fallingVelocitySet = false;
+                yVelocity.y = _gravity;
+                _isJumping = false;
+            }
+        }
+        else
+        {
+            if (!_isJumping && !_fallingVelocitySet)
+            {
+                _fallingVelocitySet = true;
+                yVelocity.y = 0;
+            }
+
+            _inAirTimer += Time.deltaTime;
+            yVelocity.y += _gravity * Time.deltaTime;
+        }
+
+        // Update in air timer once animations are properly implemented.
+        // PlayerManager.animationManager.animator.SetFloat("InAirTimer", _inAirTimer);
+        CharacterController.Move(yVelocity * Time.deltaTime);
+    }
+
+    void HandleJump()
+    {
+        if (_jumpInput && _isGrounded)
+        {
+            _isJumping = true;
+            yVelocity.y = Mathf.Sqrt(JumpHeight * -2 * _gravity);
+
+            // Call jump start animation once animations are properly implemented.
+            //PlayerManager.animationManager.PlayTargetActionAnimation("Jump Start", false);
+        }
+
+        _jumpInput = false;
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.DrawSphere(transform.position, _groundCheckRadius);
     }
 }
