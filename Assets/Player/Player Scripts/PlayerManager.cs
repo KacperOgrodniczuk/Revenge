@@ -2,15 +2,10 @@ using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    public PlayerLocomotionManager PlayerLocomotionManager { get; private set; }
 
-    // Update is called once per frame
-    void Update()
+    private void Awake()
     {
-        
+        PlayerLocomotionManager = GetComponent<PlayerLocomotionManager>();
     }
 }
