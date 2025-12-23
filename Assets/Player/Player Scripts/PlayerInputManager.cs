@@ -16,6 +16,11 @@ public class PlayerInputManager : MonoBehaviour
     [Header("Look & Mouse")]
     public Vector2 LookInput;
 
+    [Header("Lock On")]
+    public bool LockOnInput;
+    public bool NextTargetInput;
+    public bool PreviousTargetInput;
+
     void Awake()
     {
         if (Instance == null)
@@ -37,6 +42,11 @@ public class PlayerInputManager : MonoBehaviour
 
         _inputSystemActions.Player.Jump.performed += context => JumpInput = true;
         _inputSystemActions.Player.Dash.performed += context => DashInput = true;
+
+        _inputSystemActions.Player.LockOn.performed += context => LockOnInput = true;
+        _inputSystemActions.Player.LockOn.canceled += context => LockOnInput = false;
+        _inputSystemActions.Player.Next.performed += context => NextTargetInput = true;
+        _inputSystemActions.Player.Previous.performed += context => PreviousTargetInput = true;
 
         _inputSystemActions.Player.Sprint.performed += context => SprintInput = true;
         _inputSystemActions.Player.Sprint.canceled += context => SprintInput = false;

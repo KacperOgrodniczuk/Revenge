@@ -252,8 +252,6 @@ public class PlayerLocomotionManager : MonoBehaviour
             _isDashing = true;
             _dashTimer = 0.0f;
 
-            // TODO: If we have a lock on target either soft or held lock on, dash towards that target.
-
             // If we are moving or intend to move, dash in the movement direction.
             if (_moveAmount != 0f)
             {
