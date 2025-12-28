@@ -1,6 +1,4 @@
-using System;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 public class PlayerLocomotionManager : MonoBehaviour
 {
@@ -23,7 +21,6 @@ public class PlayerLocomotionManager : MonoBehaviour
     public float SprintSpeed = 6f;
     float _currentSpeed = 0f;
     Vector3 _moveDirection;
-    bool _isSprinting = false;    // Not the value of sprint input, but whether the player is currently sprinting.
 
     [Header("Rotation Values")]
     public float RotationSpeed = 15f;
@@ -35,10 +32,23 @@ public class PlayerLocomotionManager : MonoBehaviour
     [SerializeField] float _groundCheckRadius = 0.15f;
     float _gravity = -9.81f;
     float _inAirTimer;
-    bool _isGrounded;
-    bool _isJumping;
     bool _fallingVelocitySet;
     Vector3 yVelocity = Vector3.zero;
+
+    [Header("Dash")]
+    public AnimationCurve DashDistanceCurve;
+    public float MaxDashDistance = 5f;
+    public float DashDuration = 0.2f;
+    float _dashTimer;
+    float _distanceCovered = 0f;
+    Vector3 _dashDirection;
+
+    [Header("Movement Flags")]
+    bool _isSprinting = false;    // Not the value of sprint input, but whether the player is currently sprinting.
+    bool _isGrounded;
+    bool _isJumping;
+    bool _isDashing;
+
 
     private void Awake()
     {
@@ -58,6 +68,7 @@ public class PlayerLocomotionManager : MonoBehaviour
         HandleGroundCheck();
         HandleGravity();
         HandleJump();
+        HandleDash();
     }
 
     void GetMovementInputValues()
@@ -65,9 +76,10 @@ public class PlayerLocomotionManager : MonoBehaviour
         _movementInput = PlayerInputManager.Instance.MovementInput;
         _verticalMovementInput = _movementInput.y;
         _horizontalMovementInput = _movementInput.x;
+        _sprintInput = PlayerInputManager.Instance.SprintInput;
 
         _jumpInput = PlayerInputManager.Instance.JumpInput;
-        _sprintInput = PlayerInputManager.Instance.SprintInput;
+        _dashInput = PlayerInputManager.Instance.DashInput;
 
         // Reset certain action inputs in the input manager after reading it.
         PlayerInputManager.Instance.JumpInput = false;
@@ -109,7 +121,7 @@ public class PlayerLocomotionManager : MonoBehaviour
     {
         // This will be used later on when there are actions such as dashing and attacking that prevent players from moving.
         // if (PlayerManager.isPerformingAction)
-           // return;
+        // return;
 
         Vector3 cameraForward = Camera.main.transform.forward;
         Vector3 cameraRight = Camera.main.transform.right;
@@ -149,26 +161,46 @@ public class PlayerLocomotionManager : MonoBehaviour
         //if (PlayerManager.isPerformingAction)
         //return;
 
-        Vector3 cameraForward = Camera.main.transform.forward;
-        Vector3 cameraRight = Camera.main.transform.right;
+        if (_isDashing)
+            return;
 
-        cameraForward.y = 0;
-        cameraRight.y = 0;
-        cameraForward.Normalize();
-        cameraRight.Normalize();
+        Quaternion targetRotation = Quaternion.identity;
 
-        _targetRotationDirection = Vector3.zero;
-        _targetRotationDirection = cameraForward * _verticalMovementInput;
-        _targetRotationDirection += cameraRight * _horizontalMovementInput;
-        _targetRotationDirection.y = 0f;
-
-        if (_targetRotationDirection == Vector3.zero)
+        // If we are locked onto a target, rotate towards the target instead of movement direction.
+        if (PlayerManager.PlayerLockOnManager.CurrentHardLockOnTarget != null)
         {
-            _targetRotationDirection = transform.forward;
+            Vector3 direction = PlayerManager.PlayerLockOnManager.CurrentHardLockOnTarget.position - transform.position;
+            direction.y = 0;
+
+            _targetRotationDirection = Vector3.zero;
+
+            Quaternion newRotation = Quaternion.LookRotation(direction);
+            targetRotation = Quaternion.Slerp(transform.rotation, newRotation, RotationSpeed * Time.deltaTime);
+        }
+        else
+        {
+            Vector3 cameraForward = Camera.main.transform.forward;
+            Vector3 cameraRight = Camera.main.transform.right;
+
+            cameraForward.y = 0;
+            cameraRight.y = 0;
+            cameraForward.Normalize();
+            cameraRight.Normalize();
+
+            _targetRotationDirection = Vector3.zero;
+            _targetRotationDirection = cameraForward * _verticalMovementInput;
+            _targetRotationDirection += cameraRight * _horizontalMovementInput;
+            _targetRotationDirection.y = 0f;
+
+            if (_targetRotationDirection == Vector3.zero)
+            {
+                _targetRotationDirection = transform.forward;
+            }
+
+            Quaternion newRotation = Quaternion.LookRotation(_targetRotationDirection);
+            targetRotation = Quaternion.Slerp(transform.rotation, newRotation, RotationSpeed * Time.deltaTime);
         }
 
-        Quaternion newRotation = Quaternion.LookRotation(_targetRotationDirection);
-        Quaternion targetRotation = Quaternion.Slerp(transform.rotation, newRotation, RotationSpeed * Time.deltaTime);
         transform.rotation = targetRotation;
     }
 
@@ -208,6 +240,10 @@ public class PlayerLocomotionManager : MonoBehaviour
 
     void HandleJump()
     {
+        // This will be used later on when there are actions such as dashing and attacking that prevent players from jumping.
+        //if (PlayerManager.isPerformingAction)
+        //return;
+
         if (_jumpInput && _isGrounded)
         {
             _isJumping = true;
@@ -218,6 +254,62 @@ public class PlayerLocomotionManager : MonoBehaviour
         }
 
         _jumpInput = false;
+    }
+
+    void HandleDash()
+    {
+        if (_dashInput && !_isDashing)
+        {
+            // This will be used later on when there are actions such as dashing and attacking that prevent players from jumping.
+            //if (PlayerManager.isPerformingAction)
+            //return;
+
+            _isDashing = true;
+            _dashTimer = 0.0f;
+
+            // If we are moving or intend to move, dash in the movement direction.
+            if (_moveAmount != 0f)
+            {
+                Vector3 cameraForward = Camera.main.transform.forward;
+                Vector3 cameraRight = Camera.main.transform.right;
+
+                cameraForward.y = 0;
+                cameraRight.y = 0;
+
+                cameraForward.Normalize();
+                cameraRight.Normalize();
+
+                _dashDirection = cameraForward * _verticalMovementInput;
+                _dashDirection += cameraRight * _horizontalMovementInput;
+                _dashDirection.Normalize();
+            }
+
+            // If we are not moving just dash forward in the direction the player is facing. 
+            else _dashDirection = transform.forward;
+        }
+
+        if (_isDashing)
+        {
+            if (_dashTimer <= DashDuration)
+            {
+                // Normalise the time to use with animation curve for more control
+                float t = _dashTimer / DashDuration;
+                float nextDashCurveStep = DashDistanceCurve.Evaluate(t) * MaxDashDistance;
+                float dashDistanceThisFrame = nextDashCurveStep - _distanceCovered;
+
+                CharacterController.Move(_dashDirection * dashDistanceThisFrame);
+                
+                _distanceCovered = nextDashCurveStep;
+                _dashTimer += Time.deltaTime;
+            }
+            else
+            {
+                _distanceCovered = 0f;
+                _isDashing = false;
+            }
+        }
+
+        _dashInput = false;
     }
 
     private void OnDrawGizmosSelected()
