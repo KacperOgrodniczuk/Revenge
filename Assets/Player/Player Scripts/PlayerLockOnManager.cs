@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public class PlayerLockOnManager : MonoBehaviour
 {
+    public PlayerManager PlayerManager { get; private set; }
+
     [Header("Detection Settings")]
     [Tooltip("The radius in which the player can lock onto enemies (Indicated by a blue wiresphere")]
     public float LockOnRadius = 20f;
@@ -25,6 +26,7 @@ public class PlayerLockOnManager : MonoBehaviour
 
     private void Awake()
     {
+        PlayerManager = GetComponent<PlayerManager>();
         _camera = Camera.main;
     }
 

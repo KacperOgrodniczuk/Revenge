@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 476809720487835149}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.75, z: 0}
+  m_LocalPosition: {x: 0, y: 1.75, z: 0}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -143,6 +143,37 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &5901150856917425124
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2832909289594348375}
+  m_Layer: 6
+  m_Name: Camera Target Group Target
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2832909289594348375
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5901150856917425124}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8574072518679997448}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6951793486269786187
 GameObject:
   m_ObjectHideFlags: 0
@@ -247,6 +278,7 @@ GameObject:
   - component: {fileID: 6109333555254914178}
   - component: {fileID: 7774361253199328384}
   - component: {fileID: 426596363108633826}
+  - component: {fileID: 1394717107103551413}
   m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
@@ -268,6 +300,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5083047012039012156}
+  - {fileID: 2832909289594348375}
   - {fileID: 7351662962535682736}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -367,8 +400,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b22f7f1344a229d44815c3281c479038, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCameraControlManager
-  _cameraFollowTarget: {fileID: 476809720487835149}
+  _cameraTargetGroupObject: {fileID: 0}
+  _cameraTargetGroupTarget: {fileID: 5901150856917425124}
   CameraSmoothSpeed: 1
   RotationSpeed: 50
   MinimumPivot: -89
   MaximumPivot: 89
+  LockOnSmoothSpeed: 2
+--- !u!114 &1394717107103551413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7212346074021737971}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7b30cf770667294bac860f7643462fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerLockOnManager
+  LockOnRadius: 20
+  SafetyNetRadius: 2
+  _detectionLayer:
+    serializedVersion: 2
+    m_Bits: 128

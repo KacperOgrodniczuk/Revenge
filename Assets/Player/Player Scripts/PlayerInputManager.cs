@@ -33,7 +33,6 @@ public class PlayerInputManager : MonoBehaviour
         }
 
         _inputSystemActions = new InputSystem_Actions();
-
         _inputSystemActions.Player.Enable();
 
         //register callbacks
