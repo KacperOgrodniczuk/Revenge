@@ -164,26 +164,43 @@ public class PlayerLocomotionManager : MonoBehaviour
         if (_isDashing)
             return;
 
-        Vector3 cameraForward = Camera.main.transform.forward;
-        Vector3 cameraRight = Camera.main.transform.right;
+        Quaternion targetRotation = Quaternion.identity;
 
-        cameraForward.y = 0;
-        cameraRight.y = 0;
-        cameraForward.Normalize();
-        cameraRight.Normalize();
-
-        _targetRotationDirection = Vector3.zero;
-        _targetRotationDirection = cameraForward * _verticalMovementInput;
-        _targetRotationDirection += cameraRight * _horizontalMovementInput;
-        _targetRotationDirection.y = 0f;
-
-        if (_targetRotationDirection == Vector3.zero)
+        // If we are locked onto a target, rotate towards the target instead of movement direction.
+        if (PlayerManager.PlayerLockOnManager.CurrentHardLockOnTarget != null)
         {
-            _targetRotationDirection = transform.forward;
+            Vector3 direction = PlayerManager.PlayerLockOnManager.CurrentHardLockOnTarget.position - transform.position;
+            direction.y = 0;
+
+            _targetRotationDirection = Vector3.zero;
+
+            Quaternion newRotation = Quaternion.LookRotation(direction);
+            targetRotation = Quaternion.Slerp(transform.rotation, newRotation, RotationSpeed * Time.deltaTime);
+        }
+        else
+        {
+            Vector3 cameraForward = Camera.main.transform.forward;
+            Vector3 cameraRight = Camera.main.transform.right;
+
+            cameraForward.y = 0;
+            cameraRight.y = 0;
+            cameraForward.Normalize();
+            cameraRight.Normalize();
+
+            _targetRotationDirection = Vector3.zero;
+            _targetRotationDirection = cameraForward * _verticalMovementInput;
+            _targetRotationDirection += cameraRight * _horizontalMovementInput;
+            _targetRotationDirection.y = 0f;
+
+            if (_targetRotationDirection == Vector3.zero)
+            {
+                _targetRotationDirection = transform.forward;
+            }
+
+            Quaternion newRotation = Quaternion.LookRotation(_targetRotationDirection);
+            targetRotation = Quaternion.Slerp(transform.rotation, newRotation, RotationSpeed * Time.deltaTime);
         }
 
-        Quaternion newRotation = Quaternion.LookRotation(_targetRotationDirection);
-        Quaternion targetRotation = Quaternion.Slerp(transform.rotation, newRotation, RotationSpeed * Time.deltaTime);
         transform.rotation = targetRotation;
     }
 
