@@ -55,7 +55,7 @@ public class EnemyController : MonoBehaviour
 
     void Start()
     {
-        playerObject = GameObject.Find("PlayerArmature");
+        playerObject = GameObject.Find("Player");
         player = playerObject.GetComponent<Transform>();  
         anim = GetComponent<Animator>();
       
