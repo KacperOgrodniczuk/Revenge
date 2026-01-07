@@ -10,26 +10,26 @@ public class PlayerLocomotionManager : MonoBehaviour
     Vector2 _movementInput;
     float _verticalMovementInput;
     float _horizontalMovementInput;
-    float _moveAmount;
     bool _jumpInput;
     bool _sprintInput;
     bool _dashInput;
 
     [Header("Movement Values")]
+    public float MoveAmount { get; private set; }   // Calculated value to clamp movement to walking, running or sprinting state.
+    public Vector3 MoveDirection { get; private set; }
     public float WalkSpeed = 2f;
     public float RunSpeed = 4f;
     public float SprintSpeed = 6f;
     float _currentSpeed = 0f;
-    Vector3 _moveDirection;
 
     [Header("Rotation Values")]
     public float RotationSpeed = 15f;
     Vector3 _targetRotationDirection;
 
     [Header("Jump & Gravity")]
+    [SerializeField] float _groundCheckRadius = 0.15f;
     public float JumpHeight = 20f;
     public LayerMask JumpLayer;
-    [SerializeField] float _groundCheckRadius = 0.15f;
     float _gravity = -9.81f;
     float _inAirTimer;
     bool _fallingVelocitySet;
@@ -44,7 +44,7 @@ public class PlayerLocomotionManager : MonoBehaviour
     Vector3 _dashDirection;
 
     [Header("Movement Flags")]
-    bool _isSprinting = false;    // Not the value of sprint input, but whether the player is currently sprinting.
+    public bool IsSprinting {get; private set;}    // Not the value of sprint input, but whether the player is currently sprinting.
     bool _isGrounded;
     bool _isJumping;
     bool _isDashing;
@@ -89,15 +89,11 @@ public class PlayerLocomotionManager : MonoBehaviour
     // Calculate move amount based on movement input, cap it to specific intervals for the sake of only allowins specific movement states.
     void GetMoveAmountValue()
     {
-        _moveAmount = Mathf.Clamp01(Mathf.Abs(_movementInput.x) + Mathf.Abs(_movementInput.y));
+        MoveAmount = Mathf.Clamp01(Mathf.Abs(_movementInput.x) + Mathf.Abs(_movementInput.y));
 
-        if (_moveAmount > 0f && _moveAmount <= 0.5f)
+        if (MoveAmount > 0f && MoveAmount <= 1f)
         {
-            _moveAmount = 0.5f;
-        }
-        else if (_moveAmount > 0.5f && _moveAmount <= 1f)
-        {
-            _moveAmount = 1f;
+            MoveAmount = 1f;
         }
     }
 
@@ -105,16 +101,16 @@ public class PlayerLocomotionManager : MonoBehaviour
     {
         // We need to be moving and on the ground to be able to sprint.
         // This check prevents the player from being able to sprint in place.
-
+        // We also don't allows the player to sprint while locked onto a target.
         if (_sprintInput)
         {
-            if (_moveAmount >= 0.5f && _isGrounded)
-                _isSprinting = true;
+            if (MoveAmount >= 0.5f && _isGrounded && PlayerManager.PlayerLockOnManager.CurrentHardLockOnTarget == null)
+                IsSprinting = true;
             else
-                _isSprinting = false;
+                IsSprinting = false;
         }
         else
-            _isSprinting = false;
+            IsSprinting = false;
     }
 
     void HandleGroundMovement()
@@ -132,27 +128,27 @@ public class PlayerLocomotionManager : MonoBehaviour
         cameraForward.Normalize();
         cameraRight.Normalize();
 
-        _moveDirection = cameraForward * _verticalMovementInput;
-        _moveDirection += cameraRight * _horizontalMovementInput;
-        _moveDirection.Normalize();
+        MoveDirection = cameraForward * _verticalMovementInput;
+        MoveDirection += cameraRight * _horizontalMovementInput;
+        MoveDirection.Normalize();
 
-        if (_isSprinting)
+        if (IsSprinting)
         {
             _currentSpeed = SprintSpeed;
         }
         else
         {
-            if (_moveAmount == 0.5f)
+            if (MoveAmount == 0.5f)
             {
                 _currentSpeed = WalkSpeed;
             }
-            else if (_moveAmount == 1f)
+            else if (MoveAmount == 1f)
             {
                 _currentSpeed = RunSpeed;
             }
         }
 
-        CharacterController.Move(Time.deltaTime * _currentSpeed * _moveDirection);
+        CharacterController.Move(Time.deltaTime * _currentSpeed * MoveDirection);
     }
 
     void HandleRotation()
@@ -268,7 +264,7 @@ public class PlayerLocomotionManager : MonoBehaviour
             _dashTimer = 0.0f;
 
             // If we are moving or intend to move, dash in the movement direction.
-            if (_moveAmount != 0f)
+            if (MoveAmount != 0f)
             {
                 Vector3 cameraForward = Camera.main.transform.forward;
                 Vector3 cameraRight = Camera.main.transform.right;

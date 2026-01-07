@@ -1,24 +1,23 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class EnemyController : MonoBehaviour
-{ 
+{
     enum State { Patrol, Chase, Circle }
 
     [SerializeField]
     private GameObject playerObject;
     [SerializeField]
-    private Transform player; 
+    private Transform player;
     [SerializeField]
     private NavMeshAgent agent;
     [SerializeField]
     private Animator anim;
 
     [Header("Detection Settings")]
-    public float detectionRange = 30f;       
-    public float fieldOfView = 60f;           
+    public float detectionRange = 30f;
+    public float fieldOfView = 60f;
     public float loseSightTime = 3f;
 
     [Header("Attack Settings")]
@@ -32,14 +31,14 @@ public class EnemyController : MonoBehaviour
     public int orbitPointCount = 10;
     public float rebuildOrbitThreshold = 1.5f;
     public float minPointDistance = 0.5f;
-    public float orbitPointSampleDistance = 1.5f; 
+    public float orbitPointSampleDistance = 1.5f;
     private List<Vector3> orbitPoints = new List<Vector3>();
     private int currentOrbitIndex = 0;
     private Vector3 lastPlayerPos = Vector3.zero;
 
 
     [Header("Patrol Settings")]
-    public Transform[] patrolPoints;         
+    public Transform[] patrolPoints;
     private int currentPatrolIndex;
     public float waypointTolerance = 1f;
     public float minWaitTime = 1f;
@@ -56,9 +55,9 @@ public class EnemyController : MonoBehaviour
     void Start()
     {
         playerObject = GameObject.Find("Player");
-        player = playerObject.GetComponent<Transform>();  
+        player = playerObject.GetComponent<Transform>();
         anim = GetComponent<Animator>();
-      
+
         agent = GetComponent<NavMeshAgent>();
         PopulatePatrolPoints();
 
@@ -69,7 +68,7 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-   
+
 
     void Update()
     {
@@ -91,7 +90,7 @@ public class EnemyController : MonoBehaviour
             agent.speed = 3.5f;
         }
 
-        if (isWaiting == true) 
+        if (isWaiting == true)
 
         {
             anim.SetBool("IsIdle", true);
@@ -116,7 +115,7 @@ public class EnemyController : MonoBehaviour
         {
             case State.Patrol:
 
-                
+
                 if (chasingPlayer)
                 {
                     state = State.Chase;
@@ -126,7 +125,7 @@ public class EnemyController : MonoBehaviour
 
             case State.Chase:
 
-                
+
                 if (!chasingPlayer)
                 {
                     state = State.Patrol;
@@ -139,7 +138,7 @@ public class EnemyController : MonoBehaviour
                     if (dist <= attackRange)
                     {
                         state = State.Circle;
-                        BuildOrbitPoints(); 
+                        BuildOrbitPoints();
                         if (orbitPoints.Count > 0)
                         {
                             agent.SetDestination(orbitPoints[currentOrbitIndex]);
@@ -228,7 +227,7 @@ public class EnemyController : MonoBehaviour
         if (angle > fieldOfView / 2f)
             return false;
 
-        
+
         if (Physics.Raycast(transform.position + Vector3.up, directionToPlayer.normalized, out RaycastHit hit, detectionRange))
         {
             if (hit.transform == player)
@@ -251,10 +250,10 @@ public class EnemyController : MonoBehaviour
             if (waitTimer <= 0f)
             {
                 isWaiting = false;
-               
+
                 int nextIndex;
 
-              
+
                 do
                 {
                     nextIndex = Random.Range(0, patrolPoints.Length);
@@ -267,14 +266,14 @@ public class EnemyController : MonoBehaviour
             return;
         }
 
-      
+
         if (!agent.pathPending && agent.remainingDistance < waypointTolerance)
         {
-            
+
             isWaiting = true;
             waitTimer = Random.Range(minWaitTime, maxWaitTime);
 
-            
+
             agent.ResetPath();
         }
     }
@@ -355,7 +354,7 @@ public class EnemyController : MonoBehaviour
 
     }
 
-        void PopulatePatrolPoints()
+    void PopulatePatrolPoints()
     {
         //Distance for navpoints
         float searchRadius = 50f;
@@ -363,7 +362,7 @@ public class EnemyController : MonoBehaviour
         Collider[] hits = Physics.OverlapSphere(transform.position, searchRadius);
 
 
-        var points = new System.Collections.Generic.List<Transform>();
+        var points = new List<Transform>();
 
         foreach (Collider c in hits)
         {
@@ -409,7 +408,7 @@ public class EnemyController : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
-       //Escape range
+        //Escape range
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, detectionRange);
 
@@ -437,5 +436,5 @@ public class EnemyController : MonoBehaviour
         Gizmos.DrawRay(transform.position, rightBoundary * detectionRange);
     }
 }
-        
- 
+
+
