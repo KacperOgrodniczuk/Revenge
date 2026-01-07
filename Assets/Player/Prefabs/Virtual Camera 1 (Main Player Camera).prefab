@@ -10,7 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1879692345547783130}
   - component: {fileID: 3567780607884423849}
-  - component: {fileID: 8311301229932753525}
+  - component: {fileID: 8307819771030414980}
+  - component: {fileID: 4409313887558070633}
   m_Layer: 0
   m_Name: Virtual Camera 1 (Main Player Camera)
   m_TagString: Untagged
@@ -26,7 +27,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 46104044754716718}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.17287417, y: 1.6839074, z: -1.9982805}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -76,7 +77,7 @@ MonoBehaviour:
       BarrelClipping: 0.25
       Anamorphism: 0
   BlendHint: 0
---- !u!114 &8311301229932753525
+--- !u!114 &8307819771030414980
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -90,15 +91,36 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineThirdPersonFollow
   Damping: {x: 2, y: 1, z: 2}
   ShoulderOffset: {x: 0, y: 0, z: 0}
-  VerticalArmLength: 0.4
+  VerticalArmLength: 0
   CameraSide: 1
-  CameraDistance: 7.5
+  CameraDistance: 10
   AvoidObstacles:
     Enabled: 1
     CollisionFilter:
       serializedVersion: 2
       m_Bits: 1
     IgnoreTag: 
-    CameraRadius: 0.5
+    CameraRadius: 0.2
     DampingIntoCollision: 0
     DampingFromCollision: 0.5
+--- !u!114 &4409313887558070633
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 46104044754716718}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4eb4843bae7d24943842ea23130dcd55, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineGroupFraming
+  FramingMode: 2
+  FramingSize: 0.8
+  CenterOffset: {x: 0, y: 0}
+  Damping: 1
+  SizeAdjustment: 1
+  LateralAdjustment: 0
+  FovRange: {x: 1, y: 100}
+  DollyRange: {x: 0, y: 100}
+  OrthoSizeRange: {x: 1, y: 1000}
