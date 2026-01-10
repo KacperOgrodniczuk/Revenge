@@ -203,6 +203,7 @@ public class PlayerLocomotionManager : MonoBehaviour
     void HandleGroundCheck()
     {
         _isGrounded = Physics.CheckSphere(PlayerManager.transform.position, _groundCheckRadius, JumpLayer);
+        PlayerManager.PlayerAnimationManager.Animator.SetBool("IsGrounded", _isGrounded);
     }
 
     void HandleGravity()
@@ -230,7 +231,7 @@ public class PlayerLocomotionManager : MonoBehaviour
         }
 
         // Update in air timer once animations are properly implemented.
-        // PlayerManager.animationManager.animator.SetFloat("InAirTimer", _inAirTimer);
+        PlayerManager.PlayerAnimationManager.Animator.SetFloat("InAirTimer", _inAirTimer);
         CharacterController.Move(yVelocity * Time.deltaTime);
     }
 
@@ -246,7 +247,7 @@ public class PlayerLocomotionManager : MonoBehaviour
             yVelocity.y = Mathf.Sqrt(JumpHeight * -2 * _gravity);
 
             // Call jump start animation once animations are properly implemented.
-            //PlayerManager.animationManager.PlayTargetActionAnimation("Jump Start", false);
+            PlayerManager.PlayerAnimationManager.PlayTargetActionAnimation("Jump Start", false);
         }
 
         _jumpInput = false;
@@ -256,9 +257,8 @@ public class PlayerLocomotionManager : MonoBehaviour
     {
         if (_dashInput && !_isDashing)
         {
-            // This will be used later on when there are actions such as dashing and attacking that prevent players from jumping.
-            //if (PlayerManager.isPerformingAction)
-            //return;
+            if (PlayerManager.IsPerformingAction)
+            return;
 
             _isDashing = true;
             _dashTimer = 0.0f;

@@ -21,6 +21,9 @@ public class PlayerInputManager : MonoBehaviour
     public bool NextTargetInput;
     public bool PreviousTargetInput;
 
+    [Header("Attacks")]
+    public bool AttackInput;
+
     void Awake()
     {
         if (Instance == null)
@@ -35,20 +38,27 @@ public class PlayerInputManager : MonoBehaviour
         _inputSystemActions = new InputSystem_Actions();
         _inputSystemActions.Player.Enable();
 
-        //register callbacks
+        // register callbacks
+        // Movement & looking around
         _inputSystemActions.Player.Move.performed += context => MovementInput = context.ReadValue<Vector2>();
         _inputSystemActions.Player.Look.performed += context => LookInput = context.ReadValue<Vector2>();
 
+        // Locomotion actions
         _inputSystemActions.Player.Jump.performed += context => JumpInput = true;
         _inputSystemActions.Player.Dash.performed += context => DashInput = true;
 
+        // Lock on actions
         _inputSystemActions.Player.LockOn.performed += context => LockOnInput = true;
         _inputSystemActions.Player.LockOn.canceled += context => LockOnInput = false;
         _inputSystemActions.Player.Next.performed += context => NextTargetInput = true;
         _inputSystemActions.Player.Previous.performed += context => PreviousTargetInput = true;
 
+        // Sprint
         _inputSystemActions.Player.Sprint.performed += context => SprintInput = true;
         _inputSystemActions.Player.Sprint.canceled += context => SprintInput = false;
+
+        // Attack actions
+        _inputSystemActions.Player.Attack.performed += context => AttackInput = true;
 
         LockCursor();
     }

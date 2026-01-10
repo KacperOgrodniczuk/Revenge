@@ -27,4 +27,16 @@ public class PlayerAnimationManager : MonoBehaviour
         Animator.SetFloat("Horizontal Input", horizontal, dampTime, Time.deltaTime);
         Animator.SetFloat("Vertical Input", vertical, dampTime, Time.deltaTime);
     }
+
+    public void PlayTargetActionAnimation(string targetAnim, bool isPerformingAction)
+    {
+        PlayerManager.IsPerformingAction = isPerformingAction;
+        Animator.CrossFade(targetAnim, 0.2f);
+    }
+
+    public void PlayTargetAttackAnimation(string targetAnim, bool isPerformingAction)
+    { 
+        PlayerManager.IsPerformingAction = isPerformingAction;
+        Animator.CrossFade(targetAnim, 0.1f);
+    }
 }

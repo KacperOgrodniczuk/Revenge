@@ -6,6 +6,10 @@ public class PlayerManager : MonoBehaviour
     public PlayerCameraControlManager PlayerCameraControlManager{ get; private set; }
     public PlayerLockOnManager PlayerLockOnManager { get; private set; }
     public PlayerAnimationManager PlayerAnimationManager { get; private set; }
+    public PlayerCombatManager PlayerCombatManager { get; private set; }
+
+    [Header("Character Flags")]
+    public bool IsPerformingAction;
 
     private void Awake()
     {
@@ -13,6 +17,7 @@ public class PlayerManager : MonoBehaviour
         PlayerCameraControlManager = GetComponent<PlayerCameraControlManager>();
         PlayerLockOnManager = GetComponent<PlayerLockOnManager>();
         PlayerAnimationManager = GetComponent<PlayerAnimationManager>();
+        PlayerCombatManager = GetComponent<PlayerCombatManager>();
     }
 
     private void Update()
